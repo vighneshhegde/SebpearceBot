@@ -7,6 +7,15 @@ import numpy as np
 
 TOKEN = 'https://api.telegram.org/bot866724568:AAFnq-pnAOZQFEsRfpjZuzmcdgnuH5wl7Vw/'
 
+sentences = []
+with open("bullshit.txt", "r") as f:
+    sentences = f.read().split('\n')
+
+insults = []
+with open("insults.txt", "r") as f:
+    insults = f.read().split('\n')
+
+
 def callMethod(name, **kwargs):
 	arg_string = ''
 	count = 0
@@ -22,6 +31,8 @@ def callMethod(name, **kwargs):
 
 current_update_id = 0
 
+# print(sentences[10])
+
 while True:
 	r = callMethod('getUpdates',offset=current_update_id) # Gets latest update
 
@@ -30,10 +41,15 @@ while True:
 		current_result = r['result'][-1]
 		current_update_id = current_result['update_id']
 		try:
-			current_message_id = current_result['message']['message_id']
-			current_chat = current_result['message']['chat']
+			if 'message' in current_result:
+				current_message = current_result['message']
+			elif 'edited_message' in current_result:
+				current_message = current_result['edited_message']
+			current_message_id = current_message['message_id']
+			current_chat = current_message['chat']
 
-			# print(current_result)
+			print(current_result)
+			# print(current_message['from']['first_name']+', '+random.choice(sentences))
 			
 			# Separate response to private messages
 			if current_chat['type']=='private':
@@ -43,13 +59,17 @@ while True:
 
 			elif current_chat['type']=='group' or current_chat['type']=='supergroup':
 				# Trying to get the bot to recognise its mention
-				if 'entities' in current_result['message']:
-					# print(current_result['message']['entities'])
-					for ent in current_result['message']['entities']:
+				if 'entities' in current_message:
+					for ent in current_message['entities']:
 						if 'type' in ent:
-							if ent['type']=='mention':
+							if ent['type']=='mention' and '@sebpearcebot' in current_message['text']:
 								callMethod('sendMessage', chat_id = current_chat['id'],
-								text = 'Selfishness is the antithesis of coherence.',
+								text = current_message['from']['first_name']+', '+random.choice(sentences).lower(),
+								reply_to_message_id = current_message_id)
+				elif 'reply_to_message' in current_result['message'] and\
+					current_result['message']['reply_to_message']['from']['id']==866724568:
+						callMethod('sendMessage', chat_id = current_chat['id'],
+								text = current_message['from']['first_name']+', '+random.choice(insults),
 								reply_to_message_id = current_message_id)
 
 		except Exception as e:
