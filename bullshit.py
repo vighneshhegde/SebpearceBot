@@ -94,7 +94,7 @@ while True:
 								text = current_message['from']['first_name']+', '+random.choice(insults),
 								reply_to_message_id = current_message_id)
 
-				elif current_message['from']['last_name']=='Vaswani':
+				elif current_message['from']['id']==133119361:
 					if random.random()<0.5:
 						callMethod('sendMessage', chat_id=current_chat['id'],
 							text=your_mom(current_message),
