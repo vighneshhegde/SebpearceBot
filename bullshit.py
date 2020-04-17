@@ -3,9 +3,12 @@ from urllib.parse import quote
 import json
 import random
 import traceback
-import numpy as np
+# import numpy as np
+from svo import findSVOs
+from spacy.lang.en import English
 
-TOKEN = 'https://api.telegram.org/bot866724568:AAFnq-pnAOZQFEsRfpjZuzmcdgnuH5wl7Vw/'
+with open("TOKEN.txt", "r") as f:
+    TOKEN = f.readline()[:-1]
 
 sentences = []
 with open("bullshit.txt", "r") as f:
@@ -15,6 +18,23 @@ insults = []
 with open("insults.txt", "r") as f:
     insults = f.read().split('\n')
 
+def your_mom(current_message):
+	# current_message['from']['first_name'] + ', ' + random.choice(insults)
+	parser = English()
+
+	try:
+		text = current_message['text']
+		parse = parser(text)
+		print(text, parse, findSVOs(parse))
+
+
+	except Exception:
+		print(traceback.format_exc())
+		print(current_message)
+
+
+	joke = 'That\'s what your mom said last night'
+	return joke
 
 def callMethod(name, **kwargs):
 	arg_string = ''
@@ -34,7 +54,7 @@ current_update_id = 0
 # print(sentences[10])
 
 while True:
-	r = callMethod('getUpdates',offset=current_update_id) # Gets latest update
+	r = callMethod('getUpdates', offset=current_update_id) # Gets latest update
 
 	# Scan to see if the latest update is new or already received
 	if r['result'][-1]['update_id']!=current_update_id:
@@ -63,6 +83,8 @@ while True:
 					for ent in current_message['entities']:
 						if 'type' in ent:
 							if ent['type']=='mention' and '@sebpearcebot' in current_message['text']:
+								# if 'user' in ent:
+								# 	send message to that user
 								callMethod('sendMessage', chat_id = current_chat['id'],
 								text = current_message['from']['first_name']+', '+random.choice(sentences).lower(),
 								reply_to_message_id = current_message_id)
@@ -71,6 +93,12 @@ while True:
 						callMethod('sendMessage', chat_id = current_chat['id'],
 								text = current_message['from']['first_name']+', '+random.choice(insults),
 								reply_to_message_id = current_message_id)
+
+				elif current_message['from']['last_name']=='Vaswani':
+					if random.random()<0.5:
+						callMethod('sendMessage', chat_id=current_chat['id'],
+							text=your_mom(current_message),
+							reply_to_message_id=current_message_id)
 
 		except Exception as e:
 			print(traceback.format_exc())
